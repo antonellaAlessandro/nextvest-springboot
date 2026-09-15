@@ -1,5 +1,7 @@
 package nextvest.controller;
 
+import nextvest.dto.LoginRequest;
+import nextvest.dto.LoginResponse;
 import nextvest.model.Usuario;
 import nextvest.service.UsuarioService;
 import org.springframework.http.ResponseEntity;
@@ -30,5 +32,15 @@ public class UsuarioController {
         return usuarioService.buscarPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+        try {
+            LoginResponse response = usuarioService.login(request);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 }
