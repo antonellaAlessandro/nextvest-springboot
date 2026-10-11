@@ -28,6 +28,17 @@ public class OrderController {
         }
     }
 
+    @PostMapping("/sell")
+    public ResponseEntity<Order> sell(@RequestBody SellRequest request) {
+     try {
+        Order order = orderService.sell(request.getUserId(),
+                request.getInstrumentId(), request.getUnits());
+        return ResponseEntity.ok(order);
+    } catch (RuntimeException e) {
+        return ResponseEntity.badRequest().build();
+    }
+}
+
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<Order>> getHistory(@PathVariable Integer userId) {
         return ResponseEntity.ok(orderService.getHistory(userId));
@@ -40,6 +51,16 @@ public class OrderController {
     }
 
     static class BuyRequest {
+        private Integer userId;
+        private Integer instrumentId;
+        private Integer units;
+
+        public Integer getUserId() { return userId; }
+        public Integer getInstrumentId() { return instrumentId; }
+        public Integer getUnits() { return units; }
+    }
+    
+    static class SellRequest {
         private Integer userId;
         private Integer instrumentId;
         private Integer units;

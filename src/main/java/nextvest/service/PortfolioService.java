@@ -30,7 +30,7 @@ public class PortfolioService {
 
     public Portfolio getByUserId(Integer userId) {
         return portfolioRepository.findByUsuarioId(userId)
-                .orElseThrow(() -> new RuntimeException("Portfolio not found"));
+                .orElseThrow(() -> new RuntimeException("Portafolio no encontrado"));
     }
 
     public List<Position> getPositions(Integer userId) {
@@ -54,7 +54,7 @@ public class PortfolioService {
         } else {
             Position position = new Position();
             Portfolio portfolio = portfolioRepository.findById(portfolioId)
-                    .orElseThrow(() -> new RuntimeException("Portfolio not found"));
+                    .orElseThrow(() -> new RuntimeException("Portafolio no encontrado"));
             position.setPortfolio(portfolio);
             nextvest.model.Instrument instrument = new nextvest.model.Instrument();
             instrument.setId(instrumentId);

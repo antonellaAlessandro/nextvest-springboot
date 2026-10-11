@@ -23,7 +23,7 @@ public class WalletService {
 
     public Wallet getByUserId(Integer userId) {
         return walletRepository.findByUsuarioId(userId)
-                .orElseThrow(() -> new RuntimeException("Wallet not found"));
+                .orElseThrow(() -> new RuntimeException("Billetera no encontrada"));
     }
 
     public Wallet addBalance(Integer userId, Double amount) {
@@ -35,7 +35,7 @@ public class WalletService {
     public Wallet deductBalance(Integer userId, Double amount) {
         Wallet wallet = getByUserId(userId);
         if (wallet.getAvailableBalance() < amount) {
-            throw new RuntimeException("Insufficient balance");
+            throw new RuntimeException("Saldo insuficiente");
         }
         wallet.setAvailableBalance(wallet.getAvailableBalance() - amount);
         return walletRepository.save(wallet);

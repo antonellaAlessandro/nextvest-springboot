@@ -3,6 +3,7 @@ package nextvest.repository;
 import nextvest.model.Position;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+
 import java.util.List;
 import java.util.Optional;
 
