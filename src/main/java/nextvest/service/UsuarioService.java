@@ -7,6 +7,7 @@ import nextvest.repository.UsuarioRepository;
 import nextvest.security.JwtService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import nextvest.dto.UsuarioResponse;
 
 import java.util.Optional;
 
@@ -57,6 +58,17 @@ public class UsuarioService {
                 token,
                 usuario.getEmail(),
                 usuario.getId(),
+                usuario.getEstadoCuenta()
+        );
+    }
+
+    public UsuarioResponse toResponse(Usuario usuario) {
+        return new UsuarioResponse(
+                usuario.getId(),
+                usuario.getNombre(),
+                usuario.getApellido(),
+                usuario.getDni(),
+                usuario.getEmail(),
                 usuario.getEstadoCuenta()
         );
     }

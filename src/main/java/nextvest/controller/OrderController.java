@@ -1,11 +1,12 @@
 package nextvest.controller;
 
-import nextvest.model.Order;
+import nextvest.dto.OrderResponse;
 import nextvest.service.OrderService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -18,36 +19,42 @@ public class OrderController {
     }
 
     @PostMapping("/buy")
-    public ResponseEntity<Order> buy(@RequestBody BuyRequest request) {
+    public ResponseEntity<OrderResponse> buy(@RequestBody BuyRequest request) {
         try {
-            Order order = orderService.buy(request.getUserId(),
-                    request.getInstrumentId(), request.getUnits());
-            return ResponseEntity.ok(order);
+            return ResponseEntity.ok(orderService.toResponse(
+                    orderService.buy(request.getUserId(),
+                            request.getInstrumentId(), request.getUnits())));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }
     }
 
     @PostMapping("/sell")
-    public ResponseEntity<Order> sell(@RequestBody SellRequest request) {
-     try {
-        Order order = orderService.sell(request.getUserId(),
-                request.getInstrumentId(), request.getUnits());
-        return ResponseEntity.ok(order);
-    } catch (RuntimeException e) {
-        return ResponseEntity.badRequest().build();
+    public ResponseEntity<OrderResponse> sell(@RequestBody SellRequest request) {
+        try {
+            return ResponseEntity.ok(orderService.toResponse(
+                    orderService.sell(request.getUserId(),
+                            request.getInstrumentId(), request.getUnits())));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
-}
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Order>> getHistory(@PathVariable Integer userId) {
-        return ResponseEntity.ok(orderService.getHistory(userId));
+    public ResponseEntity<List<OrderResponse>> getHistory(@PathVariable Integer userId) {
+        return ResponseEntity.ok(orderService.getHistory(userId)
+                .stream()
+                .map(orderService::toResponse)
+                .collect(Collectors.toList()));
     }
 
     @GetMapping("/user/{userId}/type/{type}")
-    public ResponseEntity<List<Order>> getHistoryByType(@PathVariable Integer userId,
-                                                         @PathVariable String type) {
-        return ResponseEntity.ok(orderService.getHistoryByType(userId, type));
+    public ResponseEntity<List<OrderResponse>> getHistoryByType(@PathVariable Integer userId,
+                                                                  @PathVariable String type) {
+        return ResponseEntity.ok(orderService.getHistoryByType(userId, type)
+                .stream()
+                .map(orderService::toResponse)
+                .collect(Collectors.toList()));
     }
 
     static class BuyRequest {
@@ -59,7 +66,7 @@ public class OrderController {
         public Integer getInstrumentId() { return instrumentId; }
         public Integer getUnits() { return units; }
     }
-    
+
     static class SellRequest {
         private Integer userId;
         private Integer instrumentId;

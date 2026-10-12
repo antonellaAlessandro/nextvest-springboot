@@ -1,7 +1,7 @@
 package nextvest.controller;
 
+import nextvest.dto.PositionResponse;
 import nextvest.model.Portfolio;
-import nextvest.model.Position;
 import nextvest.service.PortfolioService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,8 +24,9 @@ public class PortfolioController {
     }
 
     @GetMapping("/user/{userId}/positions")
-    public ResponseEntity<List<Position>> getPositions(@PathVariable Integer userId) {
-        return ResponseEntity.ok(portfolioService.getPositions(userId));
+    public ResponseEntity<List<PositionResponse>> getPositions(@PathVariable Integer userId) {
+        return ResponseEntity.ok(portfolioService.toPositionResponseList(
+                portfolioService.getPositions(userId)));
     }
 
     @PostMapping("/user/{userId}/create")

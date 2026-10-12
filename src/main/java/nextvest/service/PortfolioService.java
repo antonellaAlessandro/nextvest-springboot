@@ -9,6 +9,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import nextvest.dto.PositionResponse;
+import java.util.stream.Collectors;
+
 @Service
 public class PortfolioService {
 
@@ -69,5 +72,27 @@ public class PortfolioService {
         Portfolio portfolio = getByUserId(userId);
         portfolio.setTotalValue(totalValue);
         portfolioRepository.save(portfolio);
+    }
+
+    public PositionResponse toPositionResponse(Position position) {
+        double currentValue = position.getUnits() * position.getInstrument().getCurrentPrice();
+        double gainLoss = currentValue - (position.getUnits() * position.getAverageBuyPrice());
+
+        return new PositionResponse(
+                position.getId(),
+                position.getUnits(),
+                position.getAverageBuyPrice(),
+                position.getInstrument().getName(),
+                position.getInstrument().getTicker(),
+                position.getInstrument().getCurrentPrice(),
+                currentValue,
+                gainLoss
+        );
+    }
+
+    public List<PositionResponse> toPositionResponseList(List<Position> positions) {
+        return positions.stream()
+                .map(this::toPositionResponse)
+                .collect(java.util.stream.Collectors.toList());
     }
 }

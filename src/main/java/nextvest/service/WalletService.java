@@ -4,6 +4,7 @@ import nextvest.model.Usuario;
 import nextvest.model.Wallet;
 import nextvest.repository.WalletRepository;
 import org.springframework.stereotype.Service;
+import nextvest.dto.WalletResponse;
 
 @Service
 public class WalletService {
@@ -39,5 +40,13 @@ public class WalletService {
         }
         wallet.setAvailableBalance(wallet.getAvailableBalance() - amount);
         return walletRepository.save(wallet);
+    }
+
+    public WalletResponse toResponse(Wallet wallet) {
+    return new WalletResponse(
+            wallet.getId(),
+            wallet.getAvailableBalance(),
+            wallet.getUsuario().getId()
+    );
     }
 }

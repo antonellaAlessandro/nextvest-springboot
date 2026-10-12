@@ -9,6 +9,9 @@ import nextvest.repository.PositionRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import nextvest.dto.OrderResponse;
+import java.util.stream.Collectors;
+
 @Service
 public class OrderService {
 
@@ -100,5 +103,18 @@ public class OrderService {
 
     public List<Order> getHistoryByType(Integer userId, String type) {
         return orderRepository.findByUsuarioIdAndTypeOrderByDateTimeDesc(userId, type);
+    }
+
+    public OrderResponse toResponse(Order order) {
+        return new OrderResponse(
+            order.getId(),
+            order.getType(),
+            order.getUnits(),
+            order.getUnitPrice(),
+            order.getTotalAmount(),
+            order.getDateTime(),
+            order.getInstrument().getName(),
+            order.getInstrument().getTicker()
+        );
     }
 }

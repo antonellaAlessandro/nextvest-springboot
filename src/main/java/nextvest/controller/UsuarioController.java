@@ -2,6 +2,7 @@ package nextvest.controller;
 
 import nextvest.dto.LoginRequest;
 import nextvest.dto.LoginResponse;
+import nextvest.dto.UsuarioResponse;
 import nextvest.model.Usuario;
 import nextvest.service.UsuarioService;
 import org.springframework.http.ResponseEntity;
@@ -18,29 +19,28 @@ public class UsuarioController {
     }
 
     @PostMapping("/registro")
-    public ResponseEntity<Usuario> registrar(@RequestBody Usuario usuario) {
+    public ResponseEntity<UsuarioResponse> registrar(@RequestBody Usuario usuario) {
         try {
             Usuario nuevo = usuarioService.registrar(usuario);
-            return ResponseEntity.ok(nuevo);
+            return ResponseEntity.ok(usuarioService.toResponse(nuevo));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+        try {
+            return ResponseEntity.ok(usuarioService.login(request));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Usuario> buscarPorId(@PathVariable Integer id) {
+    public ResponseEntity<UsuarioResponse> buscarPorId(@PathVariable Integer id) {
         return usuarioService.buscarPorId(id)
-                .map(ResponseEntity::ok)
+                .map(u -> ResponseEntity.ok(usuarioService.toResponse(u)))
                 .orElse(ResponseEntity.notFound().build());
-    }
-
-    @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
-        try {
-            LoginResponse response = usuarioService.login(request);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
     }
 }
