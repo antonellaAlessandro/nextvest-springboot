@@ -30,7 +30,7 @@ public class Instrument {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "minimum_profile", nullable = false)
-    private RiskProfile minimumProfile;
+    private RiskProfileType minimumProfile;
 
     @Column(nullable = false)
     private Boolean active;
