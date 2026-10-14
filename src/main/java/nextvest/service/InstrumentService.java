@@ -1,7 +1,7 @@
 package nextvest.service;
 
 import nextvest.model.Instrument;
-import nextvest.model.RiskProfile;
+import nextvest.model.RiskProfileType;
 import nextvest.repository.InstrumentRepository;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +20,7 @@ public class InstrumentService {
         return instrumentRepository.findByActiveTrue();
     }
 
-    public List<Instrument> getByRiskProfile(RiskProfile profile) {
+    public List<Instrument> getByRiskProfile(RiskProfileType profile) {
         return instrumentRepository.findByActiveTrueAndMinimumProfileLessThanEqual(profile);
     }
 
