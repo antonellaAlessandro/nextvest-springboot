@@ -1,6 +1,7 @@
 package nextvest.controller;
 
-import nextvest.model.AuthorizationToken;
+import nextvest.dto.AuthorizationTokenResponse;
+import nextvest.dto.LegalRepresentativeResponse;
 import nextvest.model.LegalRepresentative;
 import nextvest.service.AuthorizationService;
 import org.springframework.http.ResponseEntity;
@@ -17,21 +18,22 @@ public class AuthorizationController {
     }
 
     @PostMapping("/user/{userId}/representative")
-    public ResponseEntity<LegalRepresentative> registerRepresentative(
+    public ResponseEntity<LegalRepresentativeResponse> registerRepresentative(
             @PathVariable Integer userId,
             @RequestBody LegalRepresentative representative) {
         try {
-            return ResponseEntity.ok(
-                    authorizationService.registerRepresentative(userId, representative));
+            return ResponseEntity.ok(authorizationService.toRepresentativeResponse(
+                    authorizationService.registerRepresentative(userId, representative)));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }
     }
 
     @PostMapping("/user/{userId}/token")
-    public ResponseEntity<AuthorizationToken> generateToken(@PathVariable Integer userId) {
+    public ResponseEntity<AuthorizationTokenResponse> generateToken(@PathVariable Integer userId) {
         try {
-            return ResponseEntity.ok(authorizationService.generateToken(userId));
+            return ResponseEntity.ok(authorizationService.toTokenResponse(
+                    authorizationService.generateToken(userId)));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }
@@ -58,10 +60,11 @@ public class AuthorizationController {
     }
 
     @GetMapping("/user/{userId}/representative")
-    public ResponseEntity<LegalRepresentative> getRepresentative(@PathVariable Integer userId) {
+    public ResponseEntity<LegalRepresentativeResponse> getRepresentative(
+            @PathVariable Integer userId) {
         try {
-            return ResponseEntity.ok(
-                    authorizationService.getRepresentativeByUserId(userId));
+            return ResponseEntity.ok(authorizationService.toRepresentativeResponse(
+                    authorizationService.getRepresentativeByUserId(userId)));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }

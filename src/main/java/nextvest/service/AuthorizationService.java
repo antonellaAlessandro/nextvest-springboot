@@ -7,6 +7,8 @@ import nextvest.repository.AuthorizationTokenRepository;
 import nextvest.repository.LegalRepresentativeRepository;
 import nextvest.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
+import nextvest.dto.LegalRepresentativeResponse;
+import nextvest.dto.AuthorizationTokenResponse;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -90,5 +92,26 @@ public class AuthorizationService {
     public LegalRepresentative getRepresentativeByUserId(Integer userId) {
         return representativeRepository.findByUsuarioId(userId)
                 .orElseThrow(() -> new RuntimeException("Representante legal no encontrado"));
+    }
+
+    public LegalRepresentativeResponse toRepresentativeResponse(LegalRepresentative representative) {
+        return new LegalRepresentativeResponse(
+                representative.getId(),
+                representative.getName(),
+                representative.getLastName(),
+                representative.getDni(),
+                representative.getEmail(),
+                representative.getUsuario().getId()
+        );
+    }
+
+    public AuthorizationTokenResponse toTokenResponse(AuthorizationToken token) {
+        return new AuthorizationTokenResponse(
+                token.getId(),
+                token.getUuid(),
+                token.getExpiration(),
+                token.getUsed(),
+                token.getUsuario().getId()
+        );
     }
 }
