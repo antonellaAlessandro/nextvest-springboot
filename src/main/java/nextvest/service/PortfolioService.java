@@ -8,6 +8,7 @@ import nextvest.model.User;
 import nextvest.repository.PortfolioRepository;
 import nextvest.repository.PositionRepository;
 import org.springframework.stereotype.Service;
+import nextvest.dto.PortfolioResponse;
 
 import java.util.List;
 
@@ -93,5 +94,13 @@ public class PortfolioService {
         return positions.stream()
                 .map(this::toPositionResponse)
                 .toList();
+    }
+
+    public PortfolioResponse toResponse(Portfolio portfolio) {
+        return new PortfolioResponse(
+            portfolio.getId(),
+            portfolio.getTotalValue(),
+            portfolio.getUser().getId()
+        );
     }
 }

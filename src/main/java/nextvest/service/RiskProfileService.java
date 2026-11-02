@@ -6,6 +6,7 @@ import nextvest.model.User;
 import nextvest.repository.RiskProfileRepository;
 import nextvest.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import nextvest.dto.RiskProfileResponse;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -65,5 +66,15 @@ public class RiskProfileService {
         } else {
             return RiskProfileType.MODERATE;
         }
+    }
+
+    public RiskProfileResponse toResponse(RiskProfile profile) {
+        return new RiskProfileResponse(
+            profile.getId(),
+            profile.getType(),
+            profile.getEvaluationDate(),
+            profile.getAnswers(),
+            profile.getUser().getId()
+        );
     }
 }

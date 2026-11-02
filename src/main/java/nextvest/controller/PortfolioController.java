@@ -1,7 +1,7 @@
 package nextvest.controller;
 
+import nextvest.dto.PortfolioResponse;
 import nextvest.dto.PositionResponse;
-import nextvest.model.Portfolio;
 import nextvest.model.User;
 import nextvest.service.PortfolioService;
 import org.springframework.http.ResponseEntity;
@@ -20,8 +20,9 @@ public class PortfolioController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<Portfolio> getByUserId(@PathVariable Integer userId) {
-        return ResponseEntity.ok(portfolioService.getByUserId(userId));
+    public ResponseEntity<PortfolioResponse> getByUserId(@PathVariable Integer userId) {
+        return ResponseEntity.ok(portfolioService.toResponse(
+                portfolioService.getByUserId(userId)));
     }
 
     @GetMapping("/user/{userId}/positions")
@@ -31,9 +32,10 @@ public class PortfolioController {
     }
 
     @PostMapping("/user/{userId}/create")
-    public ResponseEntity<Portfolio> createPortfolio(@PathVariable Integer userId) {
+    public ResponseEntity<PortfolioResponse> createPortfolio(@PathVariable Integer userId) {
         User user = new User();
         user.setId(userId);
-        return ResponseEntity.ok(portfolioService.createPortfolio(user));
+        return ResponseEntity.ok(portfolioService.toResponse(
+                portfolioService.createPortfolio(user)));
     }
 }
