@@ -30,5 +30,5 @@ public class LegalRepresentative {
 
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false, unique = true)
-    private Usuario usuario;
+    private User user;
 }

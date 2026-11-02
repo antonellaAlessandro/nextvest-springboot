@@ -1,14 +1,14 @@
 package nextvest.service;
 
+import nextvest.dto.AuthorizationTokenResponse;
+import nextvest.dto.LegalRepresentativeResponse;
 import nextvest.model.AuthorizationToken;
 import nextvest.model.LegalRepresentative;
-import nextvest.model.Usuario;
+import nextvest.model.User;
 import nextvest.repository.AuthorizationTokenRepository;
 import nextvest.repository.LegalRepresentativeRepository;
-import nextvest.repository.UsuarioRepository;
+import nextvest.repository.UserRepository;
 import org.springframework.stereotype.Service;
-import nextvest.dto.LegalRepresentativeResponse;
-import nextvest.dto.AuthorizationTokenResponse;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -18,32 +18,32 @@ public class AuthorizationService {
 
     private final AuthorizationTokenRepository tokenRepository;
     private final LegalRepresentativeRepository representativeRepository;
-    private final UsuarioRepository usuarioRepository;
+    private final UserRepository userRepository;
 
     public AuthorizationService(AuthorizationTokenRepository tokenRepository,
-                                 LegalRepresentativeRepository representativeRepository,
-                                 UsuarioRepository usuarioRepository) {
+                                LegalRepresentativeRepository representativeRepository,
+                                UserRepository userRepository) {
         this.tokenRepository = tokenRepository;
         this.representativeRepository = representativeRepository;
-        this.usuarioRepository = usuarioRepository;
+        this.userRepository = userRepository;
     }
 
     public LegalRepresentative registerRepresentative(Integer userId,
-                                                       LegalRepresentative representative) {
-        Usuario usuario = new Usuario();
-        usuario.setId(userId);
-        representative.setUsuario(usuario);
+                                                      LegalRepresentative representative) {
+        User user = new User();
+        user.setId(userId);
+        representative.setUser(user);
         return representativeRepository.save(representative);
     }
 
     public AuthorizationToken generateToken(Integer userId) {
-        tokenRepository.findByUsuarioId(userId)
+        tokenRepository.findByUserId(userId)
                 .ifPresent(tokenRepository::delete);
 
         AuthorizationToken token = new AuthorizationToken();
-        Usuario usuario = new Usuario();
-        usuario.setId(userId);
-        token.setUsuario(usuario);
+        User user = new User();
+        user.setId(userId);
+        token.setUser(user);
         token.setUuid(UUID.randomUUID().toString());
         token.setExpiration(LocalDateTime.now().plusHours(48));
         token.setUsed(false);
@@ -66,10 +66,10 @@ public class AuthorizationService {
         token.setUsed(true);
         tokenRepository.save(token);
 
-        Usuario usuario = usuarioRepository.findById(token.getUsuario().getId())
+        User user = userRepository.findById(token.getUser().getId())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        usuario.setEstadoCuenta("ACTIVA");
-        usuarioRepository.save(usuario);
+        user.setAccountStatus("ACTIVA");
+        userRepository.save(user);
     }
 
     public void reject(String uuid) {
@@ -83,14 +83,14 @@ public class AuthorizationService {
         token.setUsed(true);
         tokenRepository.save(token);
 
-        Usuario usuario = usuarioRepository.findById(token.getUsuario().getId())
+        User user = userRepository.findById(token.getUser().getId())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        usuario.setEstadoCuenta("RECHAZADA");
-        usuarioRepository.save(usuario);
+        user.setAccountStatus("RECHAZADA");
+        userRepository.save(user);
     }
 
     public LegalRepresentative getRepresentativeByUserId(Integer userId) {
-        return representativeRepository.findByUsuarioId(userId)
+        return representativeRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Representante legal no encontrado"));
     }
 
@@ -101,7 +101,7 @@ public class AuthorizationService {
                 representative.getLastName(),
                 representative.getDni(),
                 representative.getEmail(),
-                representative.getUsuario().getId()
+                representative.getUser().getId()
         );
     }
 
@@ -111,7 +111,7 @@ public class AuthorizationService {
                 token.getUuid(),
                 token.getExpiration(),
                 token.getUsed(),
-                token.getUsuario().getId()
+                token.getUser().getId()
         );
     }
 }

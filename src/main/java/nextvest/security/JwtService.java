@@ -22,7 +22,7 @@ public class JwtService {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    public String generarToken(String email) {
+    public String generateToken(String email) {
         return Jwts.builder()
                 .subject(email)
                 .issuedAt(new Date())
@@ -31,13 +31,13 @@ public class JwtService {
                 .compact();
     }
 
-    public String extraerEmail(String token) {
+    public String extractEmail(String token) {
         return getClaims(token).getSubject();
     }
 
-    public boolean validarToken(String token, String email) {
-        String emailDelToken = extraerEmail(token);
-        return emailDelToken.equals(email) && !estaVencido(token);
+    public boolean validateToken(String token, String email) {
+        String tokenEmail = extractEmail(token);
+        return tokenEmail.equals(email) && !isExpired(token);
     }
 
     private Claims getClaims(String token) {
@@ -48,7 +48,7 @@ public class JwtService {
                 .getPayload();
     }
 
-    private boolean estaVencido(String token) {
+    private boolean isExpired(String token) {
         return getClaims(token).getExpiration().before(new Date());
     }
 }

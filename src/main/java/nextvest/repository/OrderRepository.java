@@ -6,6 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface OrderRepository extends JpaRepository<Order, Integer> {
-    List<Order> findByUsuarioIdOrderByDateTimeDesc(Integer userId);
-    List<Order> findByUsuarioIdAndTypeOrderByDateTimeDesc(Integer userId, String type);
+    List<Order> findByUserIdOrderByDateTimeDesc(Integer userId);
+    List<Order> findByUserIdAndTypeOrderByDateTimeDesc(Integer userId, String type);
 }

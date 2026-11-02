@@ -1,3 +1,3 @@
 package nextvest.dto;
 
-public record UpdateAccountStatusRequest(String estadoCuenta) {}
+public record UpdateAccountStatusRequest(String accountStatus) {}

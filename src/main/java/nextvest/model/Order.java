@@ -35,7 +35,7 @@ public class Order {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    private Usuario usuario;
+    private User user;
 
     @ManyToOne
     @JoinColumn(name = "instrument_id", nullable = false)

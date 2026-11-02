@@ -1,15 +1,15 @@
 package nextvest.dto;
 
-import lombok.Data;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class UsuarioResponse {
+public class UserResponse {
     private Integer id;
-    private String nombre;
-    private String apellido;
+    private String name;
+    private String lastName;
     private Integer dni;
     private String email;
-    private String estadoCuenta;
+    private String accountStatus;
 }

@@ -1,10 +1,10 @@
 package nextvest.service;
 
-import nextvest.model.Usuario;
+import nextvest.dto.WalletResponse;
+import nextvest.model.User;
 import nextvest.model.Wallet;
 import nextvest.repository.WalletRepository;
 import org.springframework.stereotype.Service;
-import nextvest.dto.WalletResponse;
 
 @Service
 public class WalletService {
@@ -15,15 +15,15 @@ public class WalletService {
         this.walletRepository = walletRepository;
     }
 
-    public Wallet createWallet(Usuario usuario) {
+    public Wallet createWallet(User user) {
         Wallet wallet = new Wallet();
-        wallet.setUsuario(usuario);
+        wallet.setUser(user);
         wallet.setAvailableBalance(0.0);
         return walletRepository.save(wallet);
     }
 
     public Wallet getByUserId(Integer userId) {
-        return walletRepository.findByUsuarioId(userId)
+        return walletRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Billetera no encontrada"));
     }
 
@@ -43,10 +43,10 @@ public class WalletService {
     }
 
     public WalletResponse toResponse(Wallet wallet) {
-    return new WalletResponse(
-            wallet.getId(),
-            wallet.getAvailableBalance(),
-            wallet.getUsuario().getId()
-    );
+        return new WalletResponse(
+                wallet.getId(),
+                wallet.getAvailableBalance(),
+                wallet.getUser().getId()
+        );
     }
 }

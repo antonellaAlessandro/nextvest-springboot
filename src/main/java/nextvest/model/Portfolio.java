@@ -21,5 +21,5 @@ public class Portfolio {
 
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false, unique = true)
-    private Usuario usuario;
+    private User user;
 }

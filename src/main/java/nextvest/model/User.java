@@ -1,41 +1,43 @@
 package nextvest.model;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "usuario")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Usuario {
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(nullable = false, length = 45)
-    private String nombre;
+    @Column(name = "nombre", nullable = false, length = 45)
+    private String name;
 
-    @Column(nullable = false, length = 45)
-    private String apellido;
+    @Column(name = "apellido", nullable = false, length = 45)
+    private String lastName;
 
     @Column(nullable = false, unique = true)
     private Integer dni;
 
     @Column(name = "fecha_nacimiento", nullable = false)
-    private java.time.LocalDate fechaNacimiento;
+    private LocalDate birthDate;
 
     @Column(nullable = false, unique = true, length = 45)
     private String email;
 
-    @Column(nullable = false, length = 100)
-    private String contrasenia;
+    @Column(name = "contrasenia", nullable = false, length = 100)
+    private String password;
 
     @Column(name = "estado_cuenta", length = 45)
-    private String estadoCuenta;
+    private String accountStatus;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

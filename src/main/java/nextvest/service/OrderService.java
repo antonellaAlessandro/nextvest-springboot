@@ -1,16 +1,18 @@
 package nextvest.service;
 
-import nextvest.model.*;
+import nextvest.dto.OrderResponse;
+import nextvest.model.Instrument;
+import nextvest.model.Order;
+import nextvest.model.Portfolio;
+import nextvest.model.Position;
+import nextvest.model.User;
 import nextvest.repository.InstrumentRepository;
 import nextvest.repository.OrderRepository;
-import org.springframework.stereotype.Service;
 import nextvest.repository.PositionRepository;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
-import nextvest.dto.OrderResponse;
-import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
@@ -24,7 +26,7 @@ public class OrderService {
     public OrderService(OrderRepository orderRepository,
                         WalletService walletService,
                         PortfolioService portfolioService,
-                        InstrumentRepository instrumentRepository, 
+                        InstrumentRepository instrumentRepository,
                         PositionRepository positionRepository) {
         this.orderRepository = orderRepository;
         this.walletService = walletService;
@@ -51,25 +53,26 @@ public class OrderService {
         order.setUnitPrice(instrument.getCurrentPrice());
         order.setTotalAmount(totalAmount);
         order.setDateTime(LocalDateTime.now());
-        Usuario usuario = new Usuario();
-        usuario.setId(userId);
-        order.setUsuario(usuario);
+        User user = new User();
+        user.setId(userId);
+        order.setUser(user);
         order.setInstrument(instrument);
 
         return orderRepository.save(order);
     }
+
     public Order sell(Integer userId, Integer instrumentId, Integer units) {
         Instrument instrument = instrumentRepository.findById(instrumentId)
-            .orElseThrow(() -> new RuntimeException("Instrumento no encontrado"));
+                .orElseThrow(() -> new RuntimeException("Instrumento no encontrado"));
 
         Portfolio portfolio = portfolioService.getByUserId(userId);
 
         Position position = positionRepository
-            .findByPortfolioIdAndInstrumentId(portfolio.getId(), instrumentId)
-            .orElseThrow(() -> new RuntimeException("No tenés este instrumento en el portafolio"));
+                .findByPortfolioIdAndInstrumentId(portfolio.getId(), instrumentId)
+                .orElseThrow(() -> new RuntimeException("No tenés este instrumento en el portafolio"));
 
         if (position.getUnits() < units) {
-        throw new RuntimeException("No tenés suficientes unidades para vender");
+            throw new RuntimeException("No tenés suficientes unidades para vender");
         }
 
         double totalAmount = instrument.getCurrentPrice() * units;
@@ -77,10 +80,10 @@ public class OrderService {
         walletService.addBalance(userId, totalAmount);
 
         if (position.getUnits().equals(units)) {
-        positionRepository.delete(position);
+            positionRepository.delete(position);
         } else {
-        position.setUnits(position.getUnits() - units);
-        positionRepository.save(position);
+            position.setUnits(position.getUnits() - units);
+            positionRepository.save(position);
         }
 
         Order order = new Order();
@@ -89,32 +92,32 @@ public class OrderService {
         order.setUnitPrice(instrument.getCurrentPrice());
         order.setTotalAmount(totalAmount);
         order.setDateTime(LocalDateTime.now());
-        Usuario usuario = new Usuario();
-        usuario.setId(userId);
-        order.setUsuario(usuario);
+        User user = new User();
+        user.setId(userId);
+        order.setUser(user);
         order.setInstrument(instrument);
 
         return orderRepository.save(order);
     }
 
     public List<Order> getHistory(Integer userId) {
-        return orderRepository.findByUsuarioIdOrderByDateTimeDesc(userId);
+        return orderRepository.findByUserIdOrderByDateTimeDesc(userId);
     }
 
     public List<Order> getHistoryByType(Integer userId, String type) {
-        return orderRepository.findByUsuarioIdAndTypeOrderByDateTimeDesc(userId, type);
+        return orderRepository.findByUserIdAndTypeOrderByDateTimeDesc(userId, type);
     }
 
     public OrderResponse toResponse(Order order) {
         return new OrderResponse(
-            order.getId(),
-            order.getType(),
-            order.getUnits(),
-            order.getUnitPrice(),
-            order.getTotalAmount(),
-            order.getDateTime(),
-            order.getInstrument().getName(),
-            order.getInstrument().getTicker()
+                order.getId(),
+                order.getType(),
+                order.getUnits(),
+                order.getUnitPrice(),
+                order.getTotalAmount(),
+                order.getDateTime(),
+                order.getInstrument().getName(),
+                order.getInstrument().getTicker()
         );
     }
 }

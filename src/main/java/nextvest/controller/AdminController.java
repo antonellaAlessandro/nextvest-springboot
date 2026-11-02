@@ -30,7 +30,7 @@ public class AdminController {
 
     @PutMapping("/users/{id}/status")
     public AdminUserResponse updateStatus(@PathVariable Integer id,
-                                          @RequestBody UpdateAccountStatusRequest request) {
-        return adminService.updateAccountStatus(id, request.estadoCuenta());
-    }
+                                      @RequestBody UpdateAccountStatusRequest request) {
+    return adminService.updateAccountStatus(id, request.accountStatus());
+}
 }

@@ -4,13 +4,13 @@ import java.time.LocalDate;
 
 public record AdminUserDetailResponse(
         Integer id,
-        String nombre,
-        String apellido,
+        String name,
+        String lastName,
         Integer dni,
-        LocalDate fechaNacimiento,
+        LocalDate birthDate,
         String email,
         String role,
-        String estadoCuenta,
+        String accountStatus,
         LegalRepresentativeInfo legalRepresentative
 ) {
     public record LegalRepresentativeInfo(String name, String lastName, String email, String dni) {}

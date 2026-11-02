@@ -1,30 +1,30 @@
 package nextvest.security;
 
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import nextvest.repository.UsuarioRepository;
+import nextvest.repository.UserRepository;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import java.util.List;
 
 import java.io.IOException;
+import java.util.List;
 
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
-    private final UsuarioRepository usuarioRepository;
+    private final UserRepository userRepository;
 
-    public JwtAuthFilter(JwtService jwtService, UsuarioRepository usuarioRepository) {
+    public JwtAuthFilter(JwtService jwtService, UserRepository userRepository) {
         this.jwtService = jwtService;
-        this.usuarioRepository = usuarioRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -41,19 +41,25 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         String token = authHeader.substring(7);
-        String email = jwtService.extraerEmail(token);
 
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            var usuarioOpt = usuarioRepository.findByEmail(email);
+        try {
+            String email = jwtService.extractEmail(token);
 
-            if (usuarioOpt.isPresent() && jwtService.validarToken(token, email)) {
-                var authorities = List.of(
-                    new SimpleGrantedAuthority("ROLE_" + usuarioOpt.get().getRole().name()));
-                UsernamePasswordAuthenticationToken authToken =
-                    new UsernamePasswordAuthenticationToken(email, null, authorities);
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                var userOpt = userRepository.findByEmail(email);
+
+                if (userOpt.isPresent() && jwtService.validateToken(token, email)) {
+                    var authorities = List.of(
+                            new SimpleGrantedAuthority("ROLE_" + userOpt.get().getRole().name()));
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(email, null, authorities);
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
+        } catch (JwtException | IllegalArgumentException e) {
+            // Invalid, malformed or expired token: continue unauthenticated (the request ends in 403)
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);

@@ -2,9 +2,9 @@ package nextvest.service;
 
 import nextvest.model.RiskProfile;
 import nextvest.model.RiskProfileType;
-import nextvest.model.Usuario;
+import nextvest.model.User;
 import nextvest.repository.RiskProfileRepository;
-import nextvest.repository.UsuarioRepository;
+import nextvest.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -14,12 +14,12 @@ import java.util.List;
 public class RiskProfileService {
 
     private final RiskProfileRepository riskProfileRepository;
-    private final UsuarioRepository usuarioRepository;
+    private final UserRepository userRepository;
 
     public RiskProfileService(RiskProfileRepository riskProfileRepository,
-                               UsuarioRepository usuarioRepository) {
+                              UserRepository userRepository) {
         this.riskProfileRepository = riskProfileRepository;
-        this.usuarioRepository = usuarioRepository;
+        this.userRepository = userRepository;
     }
 
     public RiskProfile evaluate(Integer userId, List<String> answers) {
@@ -27,13 +27,13 @@ public class RiskProfileService {
 
         RiskProfile profile;
 
-        if (riskProfileRepository.existsByUsuarioId(userId)) {
-            profile = riskProfileRepository.findByUsuarioId(userId).get();
+        if (riskProfileRepository.existsByUserId(userId)) {
+            profile = riskProfileRepository.findByUserId(userId).get();
         } else {
             profile = new RiskProfile();
-            Usuario usuario = new Usuario();
-            usuario.setId(userId);
-            profile.setUsuario(usuario);
+            User user = new User();
+            user.setId(userId);
+            profile.setUser(user);
         }
 
         profile.setType(type);
@@ -44,14 +44,14 @@ public class RiskProfileService {
     }
 
     public RiskProfile getByUserId(Integer userId) {
-        return riskProfileRepository.findByUsuarioId(userId)
+        return riskProfileRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Perfil de riesgo no encontrado"));
     }
 
     public RiskProfile getByEmail(String email) {
-        Usuario usuario = usuarioRepository.findByEmail(email)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        return riskProfileRepository.findByUsuarioId(usuario.getId())
+        return riskProfileRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new RuntimeException("Perfil de riesgo no encontrado"));
     }
 

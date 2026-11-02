@@ -2,9 +2,9 @@ package nextvest.dto;
 
 public record AdminUserResponse(
         Integer id,
-        String nombre,
-        String apellido,
+        String name,
+        String lastName,
         String email,
         String role,
-        String estadoCuenta
+        String accountStatus
 ) {}

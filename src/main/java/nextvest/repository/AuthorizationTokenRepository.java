@@ -7,5 +7,5 @@ import java.util.Optional;
 
 public interface AuthorizationTokenRepository extends JpaRepository<AuthorizationToken, Integer> {
     Optional<AuthorizationToken> findByUuid(String uuid);
-    Optional<AuthorizationToken> findByUsuarioId(Integer userId);
+    Optional<AuthorizationToken> findByUserId(Integer userId);
 }

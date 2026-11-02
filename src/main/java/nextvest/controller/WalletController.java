@@ -4,6 +4,7 @@ import nextvest.dto.WalletResponse;
 import nextvest.service.WalletService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import nextvest.model.User;
 
 @RestController
 @RequestMapping("/api/wallets")
@@ -36,10 +37,10 @@ public class WalletController {
         }
     }
 
-    @PostMapping("/user/{userId}/create")
-    public ResponseEntity<WalletResponse> createWallet(@PathVariable Integer userId) {
-        nextvest.model.Usuario usuario = new nextvest.model.Usuario();
-        usuario.setId(userId);
-        return ResponseEntity.ok(walletService.toResponse(walletService.createWallet(usuario)));
-    }
+   @PostMapping("/user/{userId}/create")
+        public ResponseEntity<WalletResponse> createWallet(@PathVariable Integer userId) {
+            User user = new User();
+            user.setId(userId);
+            return ResponseEntity.ok(walletService.toResponse(walletService.createWallet(user)));
+        }
 }

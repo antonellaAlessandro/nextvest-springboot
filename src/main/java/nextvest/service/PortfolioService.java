@@ -1,16 +1,15 @@
 package nextvest.service;
 
+import nextvest.dto.PositionResponse;
+import nextvest.model.Instrument;
 import nextvest.model.Portfolio;
 import nextvest.model.Position;
-import nextvest.model.Usuario;
+import nextvest.model.User;
 import nextvest.repository.PortfolioRepository;
 import nextvest.repository.PositionRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-
-import nextvest.dto.PositionResponse;
-import java.util.stream.Collectors;
 
 @Service
 public class PortfolioService {
@@ -24,15 +23,15 @@ public class PortfolioService {
         this.positionRepository = positionRepository;
     }
 
-    public Portfolio createPortfolio(Usuario usuario) {
+    public Portfolio createPortfolio(User user) {
         Portfolio portfolio = new Portfolio();
-        portfolio.setUsuario(usuario);
+        portfolio.setUser(user);
         portfolio.setTotalValue(0.0);
         return portfolioRepository.save(portfolio);
     }
 
     public Portfolio getByUserId(Integer userId) {
-        return portfolioRepository.findByUsuarioId(userId)
+        return portfolioRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Portafolio no encontrado"));
     }
 
@@ -59,7 +58,7 @@ public class PortfolioService {
             Portfolio portfolio = portfolioRepository.findById(portfolioId)
                     .orElseThrow(() -> new RuntimeException("Portafolio no encontrado"));
             position.setPortfolio(portfolio);
-            nextvest.model.Instrument instrument = new nextvest.model.Instrument();
+            Instrument instrument = new Instrument();
             instrument.setId(instrumentId);
             position.setInstrument(instrument);
             position.setUnits(units);
@@ -93,6 +92,6 @@ public class PortfolioService {
     public List<PositionResponse> toPositionResponseList(List<Position> positions) {
         return positions.stream()
                 .map(this::toPositionResponse)
-                .collect(java.util.stream.Collectors.toList());
+                .toList();
     }
 }
