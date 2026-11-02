@@ -36,4 +36,8 @@ public class Usuario {
 
     @Column(name = "estado_cuenta", length = 45)
     private String estadoCuenta;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role = Role.MINOR;
 }

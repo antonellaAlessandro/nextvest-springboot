@@ -19,12 +19,13 @@ public class UsuarioController {
     }
 
     @PostMapping("/registro")
-    public ResponseEntity<UsuarioResponse> registrar(@RequestBody Usuario usuario) {
+    public ResponseEntity<?> registrar(@RequestBody Usuario usuario) {
         try {
             Usuario nuevo = usuarioService.registrar(usuario);
             return ResponseEntity.ok(usuarioService.toResponse(nuevo));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            e.printStackTrace(); // temporal, para ver el error en la consola
+            return ResponseEntity.badRequest().body(java.util.Map.of("mensaje", String.valueOf(e.getMessage())));
         }
     }
 

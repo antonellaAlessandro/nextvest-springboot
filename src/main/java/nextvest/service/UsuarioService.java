@@ -8,6 +8,7 @@ import nextvest.security.JwtService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import nextvest.dto.UsuarioResponse;
+import nextvest.model.Role;
 
 import java.util.Optional;
 
@@ -33,6 +34,7 @@ public class UsuarioService {
         }
         usuario.setContrasenia(passwordEncoder.encode(usuario.getContrasenia()));
         usuario.setEstadoCuenta("PENDIENTE");
+        usuario.setRole(Role.MINOR);
         return usuarioRepository.save(usuario);
     }
 
