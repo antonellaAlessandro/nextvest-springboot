@@ -4,7 +4,9 @@ import nextvest.dto.WalletResponse;
 import nextvest.model.User;
 import nextvest.model.Wallet;
 import nextvest.repository.WalletRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class WalletService {
@@ -28,12 +30,14 @@ public class WalletService {
     }
 
     public Wallet addBalance(Integer userId, Double amount) {
+        validateAmount(amount);
         Wallet wallet = getByUserId(userId);
         wallet.setAvailableBalance(wallet.getAvailableBalance() + amount);
         return walletRepository.save(wallet);
     }
 
     public Wallet deductBalance(Integer userId, Double amount) {
+        validateAmount(amount);
         Wallet wallet = getByUserId(userId);
         if (wallet.getAvailableBalance() < amount) {
             throw new RuntimeException("Saldo insuficiente");
@@ -48,5 +52,12 @@ public class WalletService {
                 wallet.getAvailableBalance(),
                 wallet.getUser().getId()
         );
+    }
+
+    private void validateAmount(Double amount) {
+        if (amount == null || !Double.isFinite(amount) || amount <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "El monto debe ser mayor a cero");
+        }
     }
 }

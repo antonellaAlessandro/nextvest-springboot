@@ -9,7 +9,11 @@ import nextvest.model.User;
 import nextvest.repository.InstrumentRepository;
 import nextvest.repository.OrderRepository;
 import nextvest.repository.PositionRepository;
+import nextvest.repository.UserRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,20 +26,27 @@ public class OrderService {
     private final PortfolioService portfolioService;
     private final InstrumentRepository instrumentRepository;
     private final PositionRepository positionRepository;
+    private final UserRepository userRepository;
 
     public OrderService(OrderRepository orderRepository,
                         WalletService walletService,
                         PortfolioService portfolioService,
                         InstrumentRepository instrumentRepository,
-                        PositionRepository positionRepository) {
+                        PositionRepository positionRepository,
+                        UserRepository userRepository) {
         this.orderRepository = orderRepository;
         this.walletService = walletService;
         this.portfolioService = portfolioService;
         this.instrumentRepository = instrumentRepository;
         this.positionRepository = positionRepository;
+        this.userRepository = userRepository;
     }
 
+    @Transactional
     public Order buy(Integer userId, Integer instrumentId, Integer units) {
+        validateUnits(units);
+        User user = getActiveUser(userId);
+
         Instrument instrument = instrumentRepository.findById(instrumentId)
                 .orElseThrow(() -> new RuntimeException("Instrumento no encontrado"));
 
@@ -53,15 +64,17 @@ public class OrderService {
         order.setUnitPrice(instrument.getCurrentPrice());
         order.setTotalAmount(totalAmount);
         order.setDateTime(LocalDateTime.now());
-        User user = new User();
-        user.setId(userId);
         order.setUser(user);
         order.setInstrument(instrument);
 
         return orderRepository.save(order);
     }
 
+    @Transactional
     public Order sell(Integer userId, Integer instrumentId, Integer units) {
+        validateUnits(units);
+        User user = getActiveUser(userId);
+
         Instrument instrument = instrumentRepository.findById(instrumentId)
                 .orElseThrow(() -> new RuntimeException("Instrumento no encontrado"));
 
@@ -92,8 +105,6 @@ public class OrderService {
         order.setUnitPrice(instrument.getCurrentPrice());
         order.setTotalAmount(totalAmount);
         order.setDateTime(LocalDateTime.now());
-        User user = new User();
-        user.setId(userId);
         order.setUser(user);
         order.setInstrument(instrument);
 
@@ -119,5 +130,23 @@ public class OrderService {
                 order.getInstrument().getName(),
                 order.getInstrument().getTicker()
         );
+    }
+
+    private void validateUnits(Integer units) {
+        if (units == null || units <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "La cantidad de unidades debe ser mayor a cero");
+        }
+    }
+
+    private User getActiveUser(Integer userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+        if (!"ACTIVA".equals(user.getAccountStatus())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Tu cuenta todavía no está activa para operar");
+        }
+        return user;
     }
 }
