@@ -1,6 +1,8 @@
 package nextvest.service;
 
+import nextvest.dto.PortfolioResponse;
 import nextvest.dto.PositionResponse;
+import nextvest.exception.NotFoundException;
 import nextvest.model.Instrument;
 import nextvest.model.Portfolio;
 import nextvest.model.Position;
@@ -8,7 +10,6 @@ import nextvest.model.User;
 import nextvest.repository.PortfolioRepository;
 import nextvest.repository.PositionRepository;
 import org.springframework.stereotype.Service;
-import nextvest.dto.PortfolioResponse;
 
 import java.util.List;
 
@@ -33,7 +34,7 @@ public class PortfolioService {
 
     public Portfolio getByUserId(Integer userId) {
         return portfolioRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Portafolio no encontrado"));
+                .orElseThrow(() -> new NotFoundException("Portafolio no encontrado"));
     }
 
     public List<Position> getPositions(Integer userId) {
@@ -57,7 +58,7 @@ public class PortfolioService {
         } else {
             Position position = new Position();
             Portfolio portfolio = portfolioRepository.findById(portfolioId)
-                    .orElseThrow(() -> new RuntimeException("Portafolio no encontrado"));
+                    .orElseThrow(() -> new NotFoundException("Portafolio no encontrado"));
             position.setPortfolio(portfolio);
             Instrument instrument = new Instrument();
             instrument.setId(instrumentId);
@@ -97,10 +98,15 @@ public class PortfolioService {
     }
 
     public PortfolioResponse toResponse(Portfolio portfolio) {
+        double marketValue = positionRepository.findByPortfolioId(portfolio.getId())
+                .stream()
+                .mapToDouble(p -> p.getUnits() * p.getInstrument().getCurrentPrice())
+                .sum();
+
         return new PortfolioResponse(
-            portfolio.getId(),
-            portfolio.getTotalValue(),
-            portfolio.getUser().getId()
+                portfolio.getId(),
+                marketValue,
+                portfolio.getUser().getId()
         );
     }
 }

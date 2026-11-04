@@ -1,7 +1,8 @@
 package nextvest.controller;
 
+import nextvest.exception.NotFoundException;
 import nextvest.model.Instrument;
-import nextvest.model.RiskProfile;
+import nextvest.model.RiskProfileType;
 import nextvest.service.InstrumentService;
 import nextvest.service.RiskProfileService;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,7 @@ public class InstrumentController {
     private final RiskProfileService riskProfileService;
 
     public InstrumentController(InstrumentService instrumentService,
-                                 RiskProfileService riskProfileService) {
+                                RiskProfileService riskProfileService) {
         this.instrumentService = instrumentService;
         this.riskProfileService = riskProfileService;
     }
@@ -30,7 +31,7 @@ public class InstrumentController {
     }
 
     @GetMapping("/by-profile/{profile}")
-    public ResponseEntity<List<Instrument>> getByProfile(@PathVariable nextvest.model.RiskProfileType profile) {
+    public ResponseEntity<List<Instrument>> getByProfile(@PathVariable RiskProfileType profile) {
         return ResponseEntity.ok(instrumentService.getByRiskProfile(profile));
     }
 
@@ -42,13 +43,16 @@ public class InstrumentController {
         try {
             var profile = riskProfileService.getByEmail(email);
             return ResponseEntity.ok(instrumentService.getByRiskProfile(profile.getType()));
-        } catch (RuntimeException e) {
-            return ResponseEntity.ok(instrumentService.getAllActive());
+        } catch (NotFoundException e) {
+            // Sin test de perfil: solo se muestran los instrumentos de menor riesgo
+            return ResponseEntity.ok(
+                    instrumentService.getByRiskProfile(RiskProfileType.CONSERVATIVE));
         }
     }
 
     @PostMapping
     public ResponseEntity<Instrument> create(@RequestBody Instrument instrument) {
+        instrument.setId(null);
         return ResponseEntity.ok(instrumentService.save(instrument));
     }
 

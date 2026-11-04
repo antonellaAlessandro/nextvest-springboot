@@ -2,12 +2,12 @@ package nextvest.service;
 
 import nextvest.dto.AdminUserDetailResponse;
 import nextvest.dto.AdminUserResponse;
+import nextvest.exception.BusinessException;
+import nextvest.exception.NotFoundException;
 import nextvest.model.User;
 import nextvest.repository.LegalRepresentativeRepository;
 import nextvest.repository.UserRepository;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Set;
@@ -49,8 +49,8 @@ public class AdminService {
 
     public AdminUserResponse updateAccountStatus(Integer id, String newStatus) {
         if (newStatus == null || !VALID_STATUSES.contains(newStatus)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Estado inválido. Valores permitidos: " + VALID_STATUSES);
+            throw new BusinessException(
+                    "Estado inválido. Valores permitidos: ACTIVA, PENDIENTE, SUSPENDIDA, RECHAZADA");
         }
         User user = findOrThrow(id);
         user.setAccountStatus(newStatus);
@@ -59,7 +59,7 @@ public class AdminService {
 
     private User findOrThrow(Integer id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+                .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
     }
 
     private AdminUserResponse toSummary(User user) {

@@ -6,7 +6,6 @@ import nextvest.service.OrderService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,30 +26,18 @@ public class OrderController {
     public ResponseEntity<OrderResponse> buy(@RequestBody BuyRequest request,
                                              Authentication authentication) {
         accessGuard.checkOwnerOrAdmin(request.getUserId(), authentication);
-        try {
-            return ResponseEntity.ok(orderService.toResponse(
-                    orderService.buy(request.getUserId(),
-                            request.getInstrumentId(), request.getUnits())));
-        } catch (ResponseStatusException e) {
-            throw e;
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        return ResponseEntity.ok(orderService.toResponse(
+                orderService.buy(request.getUserId(),
+                        request.getInstrumentId(), request.getUnits())));
     }
 
     @PostMapping("/sell")
     public ResponseEntity<OrderResponse> sell(@RequestBody SellRequest request,
                                               Authentication authentication) {
         accessGuard.checkOwnerOrAdmin(request.getUserId(), authentication);
-        try {
-            return ResponseEntity.ok(orderService.toResponse(
-                    orderService.sell(request.getUserId(),
-                            request.getInstrumentId(), request.getUnits())));
-        } catch (ResponseStatusException e) {
-            throw e;
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        return ResponseEntity.ok(orderService.toResponse(
+                orderService.sell(request.getUserId(),
+                        request.getInstrumentId(), request.getUnits())));
     }
 
     @GetMapping("/user/{userId}")

@@ -2,6 +2,8 @@ package nextvest.service;
 
 import nextvest.dto.AuthorizationTokenResponse;
 import nextvest.dto.LegalRepresentativeResponse;
+import nextvest.exception.BusinessException;
+import nextvest.exception.NotFoundException;
 import nextvest.model.AuthorizationToken;
 import nextvest.model.LegalRepresentative;
 import nextvest.model.User;
@@ -9,12 +11,15 @@ import nextvest.repository.AuthorizationTokenRepository;
 import nextvest.repository.LegalRepresentativeRepository;
 import nextvest.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
 public class AuthorizationService {
+
+    private static final String EMAIL_REGEX = "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$";
 
     private final AuthorizationTokenRepository tokenRepository;
     private final LegalRepresentativeRepository representativeRepository;
@@ -30,19 +35,27 @@ public class AuthorizationService {
 
     public LegalRepresentative registerRepresentative(Integer userId,
                                                       LegalRepresentative representative) {
-        User user = new User();
-        user.setId(userId);
+        if (isBlank(representative.getName()) || isBlank(representative.getLastName())
+                || isBlank(representative.getEmail()) || representative.getDni() == null) {
+            throw new BusinessException("Completá todos los datos del representante legal");
+        }
+        if (!representative.getEmail().trim().matches(EMAIL_REGEX)) {
+            throw new BusinessException("El email del representante no tiene un formato válido");
+        }
+
+        User user = findUser(userId);
+        representative.setId(null);
         representative.setUser(user);
         return representativeRepository.save(representative);
     }
 
     public AuthorizationToken generateToken(Integer userId) {
+        User user = findUser(userId);
+
         tokenRepository.findByUserId(userId)
                 .ifPresent(tokenRepository::delete);
 
         AuthorizationToken token = new AuthorizationToken();
-        User user = new User();
-        user.setId(userId);
         token.setUser(user);
         token.setUuid(UUID.randomUUID().toString());
         token.setExpiration(LocalDateTime.now().plusHours(48));
@@ -51,47 +64,41 @@ public class AuthorizationService {
         return tokenRepository.save(token);
     }
 
+    @Transactional
     public void authorize(String uuid) {
-        AuthorizationToken token = tokenRepository.findByUuid(uuid)
-                .orElseThrow(() -> new RuntimeException("Token no encontrado"));
-
-        if (token.getUsed()) {
-            throw new RuntimeException("El token ya fue utilizado");
-        }
+        AuthorizationToken token = findUnusedToken(uuid);
 
         if (token.getExpiration().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("El token ha vencido");
+            throw new BusinessException("El token ha vencido");
         }
+
+        User user = findUser(token.getUser().getId());
+        requirePending(user);
 
         token.setUsed(true);
         tokenRepository.save(token);
 
-        User user = userRepository.findById(token.getUser().getId())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         user.setAccountStatus("ACTIVA");
         userRepository.save(user);
     }
 
+    @Transactional
     public void reject(String uuid) {
-        AuthorizationToken token = tokenRepository.findByUuid(uuid)
-                .orElseThrow(() -> new RuntimeException("Token no encontrado"));
+        AuthorizationToken token = findUnusedToken(uuid);
 
-        if (token.getUsed()) {
-            throw new RuntimeException("El token ya fue utilizado");
-        }
+        User user = findUser(token.getUser().getId());
+        requirePending(user);
 
         token.setUsed(true);
         tokenRepository.save(token);
 
-        User user = userRepository.findById(token.getUser().getId())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         user.setAccountStatus("RECHAZADA");
         userRepository.save(user);
     }
 
     public LegalRepresentative getRepresentativeByUserId(Integer userId) {
         return representativeRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Representante legal no encontrado"));
+                .orElseThrow(() -> new NotFoundException("Representante legal no encontrado"));
     }
 
     public LegalRepresentativeResponse toRepresentativeResponse(LegalRepresentative representative) {
@@ -113,5 +120,29 @@ public class AuthorizationService {
                 token.getUsed(),
                 token.getUser().getId()
         );
+    }
+
+    private User findUser(Integer userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
+    }
+
+    private AuthorizationToken findUnusedToken(String uuid) {
+        AuthorizationToken token = tokenRepository.findByUuid(uuid)
+                .orElseThrow(() -> new NotFoundException("Token no encontrado"));
+        if (token.getUsed()) {
+            throw new BusinessException("El token ya fue utilizado");
+        }
+        return token;
+    }
+
+    private void requirePending(User user) {
+        if (!"PENDIENTE".equals(user.getAccountStatus())) {
+            throw new BusinessException("La cuenta no está pendiente de autorización");
+        }
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 }

@@ -1,9 +1,11 @@
 package nextvest.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.time.LocalDate;
 
@@ -33,6 +35,8 @@ public class User {
     @Column(nullable = false, unique = true, length = 45)
     private String email;
 
+    @ToString.Exclude
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(name = "contrasenia", nullable = false, length = 100)
     private String password;
 

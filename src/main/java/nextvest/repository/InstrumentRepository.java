@@ -9,5 +9,6 @@ import java.util.List;
 public interface InstrumentRepository extends JpaRepository<Instrument, Integer> {
 
     List<Instrument> findByActiveTrue();
-    List<Instrument> findByActiveTrueAndMinimumProfileLessThanEqual(RiskProfileType minimumProfile);
+
+    List<Instrument> findByActiveTrueAndMinimumProfileIn(List<RiskProfileType> profiles);
 }
