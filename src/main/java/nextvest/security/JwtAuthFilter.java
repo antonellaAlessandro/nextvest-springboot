@@ -1,67 +1,98 @@
 package nextvest.security;
 
-import io.jsonwebtoken.JwtException;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import nextvest.repository.UserRepository;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
-@Component
-public class JwtAuthFilter extends OncePerRequestFilter {
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
 
-    private final JwtService jwtService;
-    private final UserRepository userRepository;
+    private final JwtAuthFilter jwtAuthFilter;
+    private final List<String> allowedOrigins;
 
-    public JwtAuthFilter(JwtService jwtService, UserRepository userRepository) {
-        this.jwtService = jwtService;
-        this.userRepository = userRepository;
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter,
+                          @Value("${app.cors.allowed-origins:http://localhost:5173,http://localhost:3000}")
+                          String allowedOrigins) {
+        this.jwtAuthFilter = jwtAuthFilter;
+        this.allowedOrigins = Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .toList();
     }
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
-            throws ServletException, IOException {
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
-        String authHeader = request.getHeader("Authorization");
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(allowedOrigins);
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        config.setMaxAge(3600L);
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/**", config);
+        return source;
+    }
 
-        String token = authHeader.substring(7);
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .cors(Customizer.withDefaults())
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((request, response, authException) ->
+                        writeError(response, HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized",
+                                "Tu sesión venció o no iniciaste sesión. Iniciá sesión de nuevo."))
+                .accessDeniedHandler((request, response, accessDeniedException) ->
+                        writeError(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden",
+                                "No tenés permiso para realizar esta acción"))
+            )
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/users/register", "/api/users/login").permitAll()
+                .requestMatchers("/error").permitAll()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/instruments").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/instruments/*/toggle", "/api/instruments/*/price").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/authorization/user/*/token").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT,
+                        "/api/authorization/authorize/*",
+                        "/api/authorization/reject/*").permitAll()
+                .anyRequest().authenticated()
+            )
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+        return http.build();
+    }
 
-        try {
-            String email = jwtService.extractEmail(token);
-
-            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                var userOpt = userRepository.findByEmail(email);
-
-                if (userOpt.isPresent() && jwtService.validateToken(token, email)) {
-                    var authorities = List.of(
-                            new SimpleGrantedAuthority("ROLE_" + userOpt.get().getRole().name()));
-                    UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(email, null, authorities);
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
-                }
-            }
-        } catch (JwtException | IllegalArgumentException e) {
-            // Invalid, malformed or expired token: continue unauthenticated (the request ends in 403)
-            SecurityContextHolder.clearContext();
-        }
-
-        filterChain.doFilter(request, response);
+    private void writeError(HttpServletResponse response, int status, String title, String detail)
+            throws IOException {
+        response.setStatus(status);
+        response.setContentType("application/problem+json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(
+                "{\"status\":" + status + ",\"title\":\"" + title + "\",\"detail\":\"" + detail + "\"}");
     }
 }

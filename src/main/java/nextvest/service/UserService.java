@@ -11,6 +11,7 @@ import nextvest.security.JwtService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
@@ -24,13 +25,22 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final WalletService walletService;
+    private final PortfolioService portfolioService;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
+    public UserService(UserRepository userRepository,
+                       PasswordEncoder passwordEncoder,
+                       JwtService jwtService,
+                       WalletService walletService,
+                       PortfolioService portfolioService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.walletService = walletService;
+        this.portfolioService = portfolioService;
     }
 
+    @Transactional
     public User register(User user) {
         validateNewUser(user);
         user.setEmail(normalizeEmail(user.getEmail()));
@@ -48,7 +58,11 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setAccountStatus("PENDIENTE");
         user.setRole(Role.MINOR);
-        return userRepository.save(user);
+
+        User saved = userRepository.save(user);
+        walletService.createWallet(saved);
+        portfolioService.createPortfolio(saved);
+        return saved;
     }
 
     public Optional<User> findByEmail(String email) {
