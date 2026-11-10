@@ -81,6 +81,7 @@ public class PortfolioService {
 
         return new PositionResponse(
                 position.getId(),
+                position.getInstrument().getId(),
                 position.getUnits(),
                 position.getAverageBuyPrice(),
                 position.getInstrument().getName(),

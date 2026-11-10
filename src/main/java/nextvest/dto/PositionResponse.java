@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class PositionResponse {
     private Integer id;
+    private Integer instrumentId;
     private Integer units;
     private Double averageBuyPrice;
     private String instrumentName;
