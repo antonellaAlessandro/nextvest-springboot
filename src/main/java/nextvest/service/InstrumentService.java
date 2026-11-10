@@ -13,6 +13,9 @@ import java.util.List;
 @Service
 public class InstrumentService {
 
+    // Tipos de instrumento que maneja la plataforma.
+    private static final List<String> ALLOWED_TYPES = List.of("FCI", "CEDEAR", "BOND", "STOCK");
+
     private final InstrumentRepository instrumentRepository;
 
     public InstrumentService(InstrumentRepository instrumentRepository) {
@@ -39,6 +42,14 @@ public class InstrumentService {
                 || instrument.getMinimumProfile() == null) {
             throw new BusinessException("Faltan datos obligatorios del instrumento");
         }
+
+        String type = instrument.getType().trim().toUpperCase();
+        if (!ALLOWED_TYPES.contains(type)) {
+            throw new BusinessException(
+                    "El tipo de instrumento no es válido. Usá FCI, CEDEAR, BOND o STOCK");
+        }
+        instrument.setType(type);
+
         validatePrice(instrument.getCurrentPrice());
         if (instrument.getActive() == null) {
             instrument.setActive(true);
