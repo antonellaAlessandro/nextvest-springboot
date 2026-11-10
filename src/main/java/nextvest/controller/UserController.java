@@ -1,7 +1,10 @@
 package nextvest.controller;
 
+import nextvest.dto.ChangePasswordRequest;
+import nextvest.dto.LegalRepresentativeResponse;
 import nextvest.dto.LoginRequest;
 import nextvest.dto.LoginResponse;
+import nextvest.dto.UpdateUserRequest;
 import nextvest.dto.UserResponse;
 import nextvest.exception.NotFoundException;
 import nextvest.model.User;
@@ -40,5 +43,30 @@ public class UserController {
         User user = userService.findById(id)
                 .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
         return ResponseEntity.ok(userService.toResponse(user));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<UserResponse> update(@PathVariable Integer id,
+                                               @RequestBody UpdateUserRequest request,
+                                               Authentication authentication) {
+        accessGuard.checkOwnerOrAdmin(id, authentication);
+        return ResponseEntity.ok(userService.toResponse(userService.update(id, request)));
+    }
+
+    @PutMapping("/{id}/password")
+    public ResponseEntity<Void> changePassword(@PathVariable Integer id,
+                                               @RequestBody ChangePasswordRequest request,
+                                               Authentication authentication) {
+        accessGuard.checkOwnerOrAdmin(id, authentication);
+        userService.changePassword(id, request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/legal-representative")
+    public ResponseEntity<LegalRepresentativeResponse> findLegalRepresentative(
+            @PathVariable Integer id,
+            Authentication authentication) {
+        accessGuard.checkOwnerOrAdmin(id, authentication);
+        return ResponseEntity.ok(userService.findLegalRepresentative(id));
     }
 }
