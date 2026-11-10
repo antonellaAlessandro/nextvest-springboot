@@ -164,11 +164,11 @@ public class OrderService {
     private void requireSuitableProfile(Integer userId, Instrument instrument) {
         RiskProfile profile = riskProfileRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN,
-                        "Completá el test de perfil de riesgo antes de operar"));
+                        "Completá el test de perfil de inversor antes de operar"));
 
         if (instrument.getMinimumProfile().ordinal() > profile.getType().ordinal()) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Este instrumento no es compatible con tu perfil de riesgo");
+                    "Este instrumento no es compatible con tu perfil de inversor");
         }
     }
 
