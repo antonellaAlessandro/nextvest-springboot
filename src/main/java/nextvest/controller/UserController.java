@@ -1,7 +1,6 @@
 package nextvest.controller;
 
 import nextvest.dto.ChangePasswordRequest;
-import nextvest.dto.LegalRepresentativeResponse;
 import nextvest.dto.LoginRequest;
 import nextvest.dto.LoginResponse;
 import nextvest.dto.UpdateUserRequest;
@@ -60,13 +59,5 @@ public class UserController {
         accessGuard.checkOwnerOrAdmin(id, authentication);
         userService.changePassword(id, request);
         return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/{id}/legal-representative")
-    public ResponseEntity<LegalRepresentativeResponse> findLegalRepresentative(
-            @PathVariable Integer id,
-            Authentication authentication) {
-        accessGuard.checkOwnerOrAdmin(id, authentication);
-        return ResponseEntity.ok(userService.findLegalRepresentative(id));
     }
 }

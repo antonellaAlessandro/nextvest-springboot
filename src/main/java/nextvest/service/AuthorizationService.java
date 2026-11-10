@@ -1,5 +1,6 @@
 package nextvest.service;
 
+import nextvest.dto.AuthorizationInfoResponse;
 import nextvest.dto.AuthorizationTokenResponse;
 import nextvest.dto.LegalRepresentativeResponse;
 import nextvest.exception.BusinessException;
@@ -13,7 +14,9 @@ import nextvest.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
 import java.util.UUID;
 
 @Service
@@ -62,6 +65,37 @@ public class AuthorizationService {
         token.setUsed(false);
 
         return tokenRepository.save(token);
+    }
+
+    /**
+     * Datos mínimos para que el representante sepa a qué cuenta corresponde el link.
+     * Es público: el token (uuid) funciona como secreto y no se expone nada sensible
+     * (ni DNI, ni email, ni fecha de nacimiento).
+     */
+    @Transactional(readOnly = true)
+    public AuthorizationInfoResponse getInfo(String uuid) {
+        AuthorizationToken token = tokenRepository.findByUuid(uuid)
+                .orElseThrow(() -> new NotFoundException("Token no encontrado"));
+
+        User user = findUser(token.getUser().getId());
+        String representativeName = representativeRepository.findByUserId(user.getId())
+                .map(r -> r.getName() + " " + r.getLastName())
+                .orElse(null);
+
+        Integer age = user.getBirthDate() != null
+                ? Period.between(user.getBirthDate(), LocalDate.now()).getYears()
+                : null;
+
+        return new AuthorizationInfoResponse(
+                user.getName(),
+                user.getLastName(),
+                age,
+                representativeName,
+                token.getExpiration(),
+                Boolean.TRUE.equals(token.getUsed()),
+                token.getExpiration().isBefore(LocalDateTime.now()),
+                "PENDIENTE".equals(user.getAccountStatus())
+        );
     }
 
     @Transactional

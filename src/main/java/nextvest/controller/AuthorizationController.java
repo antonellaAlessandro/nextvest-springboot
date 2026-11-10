@@ -1,5 +1,6 @@
 package nextvest.controller;
 
+import nextvest.dto.AuthorizationInfoResponse;
 import nextvest.dto.AuthorizationTokenResponse;
 import nextvest.dto.LegalRepresentativeResponse;
 import nextvest.model.LegalRepresentative;
@@ -36,6 +37,11 @@ public class AuthorizationController {
     public ResponseEntity<AuthorizationTokenResponse> generateToken(@PathVariable Integer userId) {
         return ResponseEntity.ok(authorizationService.toTokenResponse(
                 authorizationService.generateToken(userId)));
+    }
+
+    @GetMapping("/info/{uuid}")
+    public ResponseEntity<AuthorizationInfoResponse> info(@PathVariable String uuid) {
+        return ResponseEntity.ok(authorizationService.getInfo(uuid));
     }
 
     @PutMapping("/authorize/{uuid}")

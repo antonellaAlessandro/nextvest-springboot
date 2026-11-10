@@ -1,17 +1,14 @@
 package nextvest.service;
 
 import nextvest.dto.ChangePasswordRequest;
-import nextvest.dto.LegalRepresentativeResponse;
 import nextvest.dto.LoginRequest;
 import nextvest.dto.LoginResponse;
 import nextvest.dto.UpdateUserRequest;
 import nextvest.dto.UserResponse;
 import nextvest.exception.BusinessException;
 import nextvest.exception.NotFoundException;
-import nextvest.model.LegalRepresentative;
 import nextvest.model.Role;
 import nextvest.model.User;
-import nextvest.repository.LegalRepresentativeRepository;
 import nextvest.repository.UserRepository;
 import nextvest.security.JwtService;
 import org.springframework.http.HttpStatus;
@@ -31,20 +28,17 @@ public class UserService {
     private static final int EMAIL_MAX_LENGTH = 45;
 
     private final UserRepository userRepository;
-    private final LegalRepresentativeRepository legalRepresentativeRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final WalletService walletService;
     private final PortfolioService portfolioService;
 
     public UserService(UserRepository userRepository,
-                       LegalRepresentativeRepository legalRepresentativeRepository,
                        PasswordEncoder passwordEncoder,
                        JwtService jwtService,
                        WalletService walletService,
                        PortfolioService portfolioService) {
         this.userRepository = userRepository;
-        this.legalRepresentativeRepository = legalRepresentativeRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.walletService = walletService;
@@ -165,19 +159,6 @@ public class UserService {
 
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
-    }
-
-    public LegalRepresentativeResponse findLegalRepresentative(Integer userId) {
-        LegalRepresentative rep = legalRepresentativeRepository.findByUserId(userId)
-                .orElseThrow(() -> new NotFoundException("No hay un representante legal cargado"));
-        return new LegalRepresentativeResponse(
-                rep.getId(),
-                rep.getName(),
-                rep.getLastName(),
-                rep.getDni(),
-                rep.getEmail(),
-                rep.getUser().getId()
-        );
     }
 
     public UserResponse toResponse(User user) {
