@@ -4,6 +4,7 @@ import nextvest.exception.NotFoundException;
 import nextvest.model.Instrument;
 import nextvest.model.RiskProfileType;
 import nextvest.service.InstrumentService;
+import nextvest.service.PriceUpdateService;
 import nextvest.service.RiskProfileService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -11,6 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/instruments")
@@ -18,11 +20,14 @@ public class InstrumentController {
 
     private final InstrumentService instrumentService;
     private final RiskProfileService riskProfileService;
+    private final PriceUpdateService priceUpdateService;
 
     public InstrumentController(InstrumentService instrumentService,
-                                RiskProfileService riskProfileService) {
+                                RiskProfileService riskProfileService,
+                                PriceUpdateService priceUpdateService) {
         this.instrumentService = instrumentService;
         this.riskProfileService = riskProfileService;
+        this.priceUpdateService = priceUpdateService;
     }
 
     @GetMapping
@@ -66,5 +71,12 @@ public class InstrumentController {
     public ResponseEntity<Void> updatePrice(@PathVariable Integer id, @RequestBody Double price) {
         instrumentService.updatePrice(id, price);
         return ResponseEntity.ok().build();
+    }
+
+    // Pide a IOL los precios de todos los instrumentos activos.
+    @PostMapping("/refresh-prices")
+    public ResponseEntity<Map<String, Integer>> refreshPrices() {
+        int updated = priceUpdateService.updateAll();
+        return ResponseEntity.ok(Map.of("updated", updated));
     }
 }

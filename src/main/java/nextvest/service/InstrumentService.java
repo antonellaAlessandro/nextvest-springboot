@@ -22,8 +22,9 @@ public class InstrumentService {
         this.instrumentRepository = instrumentRepository;
     }
 
+    // Solo instrumentos con precio: un instrumento nuevo aparece cuando IOL le informa el primero.
     public List<Instrument> getAllActive() {
-        return instrumentRepository.findByActiveTrue();
+        return instrumentRepository.findByActiveTrueAndCurrentPriceNotNull();
     }
 
     // Devuelve los instrumentos cuyo perfil mínimo es igual o menor al del usuario.
@@ -32,7 +33,8 @@ public class InstrumentService {
         List<RiskProfileType> allowed = Arrays.stream(RiskProfileType.values())
                 .filter(p -> p.ordinal() <= profile.ordinal())
                 .toList();
-        return instrumentRepository.findByActiveTrueAndMinimumProfileIn(allowed);
+        return instrumentRepository
+                .findByActiveTrueAndCurrentPriceNotNullAndMinimumProfileIn(allowed);
     }
 
     public Instrument save(Instrument instrument) {
@@ -50,7 +52,10 @@ public class InstrumentService {
         }
         instrument.setType(type);
 
-        validatePrice(instrument.getCurrentPrice());
+        // El precio es opcional: si no viene, lo completa la actualización desde IOL.
+        if (instrument.getCurrentPrice() != null) {
+            validatePrice(instrument.getCurrentPrice());
+        }
         if (instrument.getActive() == null) {
             instrument.setActive(true);
         }
