@@ -51,12 +51,13 @@ public class PriceUpdateService {
         for (Instrument instrument : instrumentRepository.findByActiveTrue()) {
             try {
                 // Los FCI se consultan con plazo T0; el resto con T1.
-                Optional<Double> price = "FCI".equals(instrument.getType())
-                        ? iolClient.getFciPrice(instrument.getTicker())
-                        : iolClient.getMarketPrice(instrument.getTicker());
+                Optional<IolClient.Quote> quote = "FCI".equals(instrument.getType())
+                        ? iolClient.getFciQuote(instrument.getTicker())
+                        : iolClient.getMarketQuote(instrument.getTicker());
 
-                if (price.isPresent()) {
-                    instrument.setCurrentPrice(price.get());
+                if (quote.isPresent()) {
+                    instrument.setCurrentPrice(quote.get().price());
+                    instrument.setDailyChangePercent(quote.get().changePercent());
                     instrumentRepository.save(instrument);
                     updated++;
                 } else {

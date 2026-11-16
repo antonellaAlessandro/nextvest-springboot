@@ -53,17 +53,20 @@ public class IolClient {
                 && password != null && !password.isBlank();
     }
 
+    // Precio actual y variación del día (en %) de un instrumento.
+    public record Quote(double price, Double changePercent) {}
+
     // Acciones, bonos y CEDEARs: plazo T1 (24 horas).
-    public Optional<Double> getMarketPrice(String symbol) {
-        return extractCurrentPrice(getQuote(symbol, term, true));
+    public Optional<Quote> getMarketQuote(String symbol) {
+        return extractQuote(getQuote(symbol, term, true));
     }
 
     // Fondos comunes de inversión: IOL los cotiza en BCBA con plazo T0.
-    public Optional<Double> getFciPrice(String symbol) {
-        return extractCurrentPrice(getQuote(symbol, fciTerm, true));
+    public Optional<Quote> getFciQuote(String symbol) {
+        return extractQuote(getQuote(symbol, fciTerm, true));
     }
 
-    // GET /broker/market-data/{symbol}/quote ; el precio actual viene en data.prices.current
+    // GET /broker/market-data/{symbol}/quote
     private Map<?, ?> getQuote(String symbol, String quoteTerm, boolean retryOnUnauthorized) {
         try {
             return restClient.get()
@@ -83,13 +86,18 @@ public class IolClient {
         }
     }
 
-    private Optional<Double> extractCurrentPrice(Map<?, ?> body) {
+    // El precio viene en data.prices.current y la variación del día en data.change.percent
+    private Optional<Quote> extractQuote(Map<?, ?> body) {
         if (body != null
                 && body.get("data") instanceof Map<?, ?> data
                 && data.get("prices") instanceof Map<?, ?> prices
                 && prices.get("current") instanceof Number current
                 && current.doubleValue() > 0) {
-            return Optional.of(current.doubleValue());
+            Double change = null;
+            if (data.get("change") instanceof Map<?, ?> ch && ch.get("percent") instanceof Number pc) {
+                change = pc.doubleValue();
+            }
+            return Optional.of(new Quote(current.doubleValue(), change));
         }
         return Optional.empty();
     }

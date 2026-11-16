@@ -37,4 +37,8 @@ public class Instrument {
 
     @Column(name = "current_price")
     private Double currentPrice;
+
+    // Variación del día en %, la informa IOL junto con el precio.
+    @Column(name = "daily_change_percent")
+    private Double dailyChangePercent;
 }
